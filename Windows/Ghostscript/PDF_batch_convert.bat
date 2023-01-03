@@ -1,5 +1,8 @@
 @echo off
 
+:: This script in its current form will convert source PDF to PDF/A using Ghostscript. Ghostscript needs to be installed on the system.
+:: This script is a good candidate to do other batch PDF jobs like adding watermarks. Or to be rewritten in powershell, where it will be more readable too.
+
 :: needs the three parameters - otherwise show the help
 if [%1]==[] goto help
 if [%2]==[] goto help
