@@ -23,7 +23,7 @@ IF %dest_path:~-1%==\ SET dest_path=%dest_path:~0,-1%
 
 
 
-		:: In the loop below some of these are valid string maniulations...
+		:: In the loop below some of these are valid string manipulations... This comment explains what they are, so the code is easier to read
 		:: The line below would just send every pdf file through the .bat with the results displayed in the console
 		:: verapdf.bat "%%F"
 
