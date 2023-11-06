@@ -61,7 +61,7 @@ for %%i in ("%videoFolder%\*.mp4") do (
 )
 
 rem Initialize the FFmpeg command for concatenation and optimization
-set "ffmpegCmd=ffmpeg -f concat -safe 0 -i concat.txt -c:v libx264 -preset fast -tune film -crf 23 -c:a aac -strict experimental -b:a 192k"
+set "ffmpegCmd=ffmpeg -f concat -safe 0 -i concat.txt -vf setpts=PTS-STARTPTS -c:v libx264 -preset fast -tune film -crf 23 -c:a aac -strict experimental -b:a 192k"
 
 rem Create a text file (concat.txt) with the list of input files
 (
@@ -74,7 +74,7 @@ rem Create a text file (concat.txt) with the list of input files
 
 rem Determine the output filename based on the first input file
 set "firstInputFile=!files[1]!"
-for %%i in ("!firstInputFile!") do set "outputFilename=%%~ni_concatenated.mp4"
+for %%i in ("!firstInputFile!") do set "outputFilename=%%~ni.concatenated.mp4"
 
 rem Concatenate the video parts and optimize for the web
 %ffmpegCmd% "%outputFilename%"
