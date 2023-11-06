@@ -13,6 +13,7 @@
 
 # About
 # This script will join mp4 files together and then transcode the combined file into a format sutible for streaming over HTTP on the web.
+# This script expects a folder called video_parts - but you can edit this below.
 
 # Define the folder path where the video parts are located
 videoFolder="video_parts"
