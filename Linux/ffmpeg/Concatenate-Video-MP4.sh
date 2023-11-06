@@ -1,58 +1,61 @@
 #!/bin/bash
-
-#   http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations
-# under the License.
+# Concatenate-Video-MP4.sh
 #
-# Concatenate-Video
-
 # About
 # This script will join mp4 files together and then transcode the combined file into a format sutible for streaming over HTTP on the web.
 # This script expects a folder called video_parts - but you can edit this below.
+#
+# filenames in the folder should have the format [video_name].[part_number_integer].mp4
+#
+# License: This script is provided under the Apache 2.0 License.
+#
 
-# Define the folder path where the video parts are located
-videoFolder="video_parts"
 
-# Initialize an array to hold the file paths
-declare -A files
+# Define the directory where the video files are located
+videoDirectory="./video_parts"
 
-# Loop through the files in the folder
-for file in "$videoFolder"/*.mp4; do
-    filename=$(basename "$file")
-    partNumber=$(echo "$filename" | cut -d '.' -f 2)
-    
-    # Append the file path to the array using the part number as the index
-    files["$partNumber"]="$file"
-done
+# Loop through the .mp4 files in the directory and collect them in an array
+files=()
+while IFS= read -r -d $'\0' file; do
+    files+=("$file")
+done < <(find "$videoDirectory" -name "*.mp4" -print0)
 
-# Determine the output filename based on the first input file
-firstPartNumber="${!files[@]}"
-outputFilename=$(basename "${files[$firstPartNumber]%.*}").concatenated.mp4
+# Check if any video files were found
+if [ ${#files[@]} -gt 0 ]; then
+    # Extract the [video_name] from the first video for the output file name
+    firstFile="${files[0]}"
+    videoName=$(basename "$firstFile" | cut -d '.' -f 1)
 
-# Create a list of sorted file parts
-sortedParts=()
-for ((i=1; i<=${#files[@]}; i++)); do
-    sortedParts+=("${files[$i]}")
-done
+    # Sort the files based on the [number] part of the name
+    sortedFiles=($(printf "%s\n" "${files[@]}" | sort -t. -k2,2n))
 
-# Initialize the FFmpeg command for concatenation and optimization
-ffmpegCmd="ffmpeg -f concat -safe 0 -i concat.txt -vf setpts=PTS-STARTPTS -c:v libx264 -preset fast -tune film -crf 23 -c:a aac -strict experimental -b:a 192k"
+    outputFileName="concat.txt"
+    outputVideoName="${videoName}.concat.mp4"
 
-# Create a text file (concat.txt) with the list of input files in sorted order
-> concat.txt
-for file in "${sortedParts[@]}"; do
-    echo "file '$file'" >> concat.txt
-done
+    # Loop through the sorted files and append each wrapped string directly to the output file
+    for file in "${sortedFiles[@]}"; do
+        printf "file '%s'\n" "$file" >> "$outputFileName"
+    done
+    echo "Video list has been created in '$outputFileName'"
 
-# Concatenate the video parts and optimize for the web
-eval "$ffmpegCmd" "$outputFilename"
+    # Initialize the FFmpeg command for concatenation and optimization
+    ffmpegCmd="ffmpeg -f concat -safe 0 -i concat.txt -vf setpts=PTS-STARTPTS -c:v libx264 -preset fast -tune film -crf 23 -c:a aac -strict experimental -b:a 192k"
 
-# Clean up temporary files
-rm concat.txt
 
-echo "Video parts concatenated and optimized for web to $outputFilename"
+    # Concatenate the video parts and optimize for the web
+    eval "$ffmpegCmd" "$outputVideoName"
+
+    # Clean up temporary files
+    rm concat.txt
+
+    echo "Video parts concatenated and optimized for web to $outputFileName"
+
+
+else
+    echo "No video files found in the '$videoDirectory' directory."
+fi
+
+
+
+
